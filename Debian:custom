@@ -1,0 +1,27 @@
+mkdir -p /srv/obs/repos/Debian_custom/conf
+
+cd /srv/obs/repos/Debian_custom 
+
+cat conf/distributions
+Origin: jessie-obs
+Label: jessie-obs
+Suite: jessie-obs
+Codename: jessie-obs
+Version: 8.1
+Architectures: amd64 armhf armel
+Components: main
+Description: jessie-obs
+#SignWith: yes
+DebOverride: ../indices/override.jessie-obs.main
+UDebOverride: ../indices/override.jessie-obs.main.debian-installer
+DscOverride: ../indices/override.jessie-obs.main.src
+DebIndices: Packages Release . .gz .bz2
+UDebIndices: Packages . .gz .bz2
+DscIndices: Sources Release .gz .bz2
+Contents: . .gz .bz2
+Log: jessie-obs.log
+
+reprepro -Vb . includedeb jessie-obs /root/qemu-linux-user_2.3.1-10.1_armhf.deb
+reprepro -Vb . includedeb jessie-obs /root/qemu-linux-user_2.3.1-10.1_armel.deb
+reprepro -Vb . includedeb jessie-obs /root/qemu-linux-user_2.3.1-10.1_amd64.deb
+

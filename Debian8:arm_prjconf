@@ -1,0 +1,36 @@
+%ifarch armv7l armv7hl
+HostArch: x86_64
+#VMinstall: !kernel-obs-build
+%if 0%{?suse_version}
+Preinstall: qemu-linux-user
+%else
+#Preinstall: qemu-system-arm qemu-user-binfmt 
+#Preinstall: binfmt-support qemu-user-static qemu-user
+Preinstall: qemu-linux-user
+%endif
+
+%if 0%{?suse_version}
+#Preinstall:
+%else
+Preinstall: gawk libdebconfclient0 dialog
+%endif
+
+#Target: armv7hl-suse-linux
+%endif
+
+
+%ifarch armv7l armv7hl
+ExportFilter: ^kernel-obs-build.*\.x86_64\.rpm$ . armv7l armv7hl
+ExportFilter: ^qemu-user.*\.x86_64.rpm$ . armv7l armv7hl
+ExportFilter: ^qemu-system-arm.*\.x86_64.rpm$ . armv7l armv7hl
+ExportFilter: ^qemu-accel-armv7.*\.x86_64\.rpm$ . armv7l armv7hl
+
+ExportFilter: \.i686\.rpm$ i686
+ExportFilter: \.armv6l\.rpm$ armv6l
+ExportFilter: \.armv6hl\.rpm$ armv6l
+ExportFilter: \.armv7l\.rpm$ armv7l
+ExportFilter: \.armv7hl\.rpm$ armv7l
+ExportFilter: \.aarch64\.rpm$ aarch64
+
+Ignore: pesign-obs-integration
+%endif
