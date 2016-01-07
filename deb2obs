@@ -1,0 +1,48 @@
+#!/bin/bash
+
+test -z $1 && echo -e "usage: $0 packagedir\nPlease get a package with 'apt-get source package'\nand give the dir as parameter" && exit 1
+
+package=$1
+tmpdir=/tmp/deb2obs/${package}
+tmporg=${tmpdir}/org
+tmpnew=${tmpdir}/obs
+tmptmp=${tmpdir}/tmp
+
+rm -r ${tmpdir} 2>/dev/null
+
+mkdir -p $tmpdir $tmporg $tmpnew
+cp -r $package/* $tmporg
+
+### find dirs and tar files
+srcdir=$(find $tmporg -mindepth 1 -maxdepth 1 -type d -name "$package*"|head -1)
+srctar=$(find $tmporg -mindepth 1 -maxdepth 1 -type f -name "$package*orig*.tar.*"|head -1)
+test -z $srctar && srctar=$(find $tmporg -mindepth 1 -maxdepth 1 -type f -name "$package*.tar.*"|head -1)
+
+### fix tar files containing /debian
+tar tf ${srctar} | grep "/debian/" >/dev/null
+if [ $? -eq 0 ]; then
+ ### detect archive type
+ echo ${srctar} | grep '\.tar\.xz' >/dev/null && archiver=xz
+ echo ${srctar} | grep '\.tar\.gz' >/dev/null && archiver=gzip
+ { $archiver -d < ${srctar} | tar --delete --wildcards -f - '*/debian/' | $archiver && perl -e 'truncate STDOUT, tell STDOUT'; } 1<> ${srctar}
+fi
+
+cp ${srctar} ${tmpnew}
+
+cp ${tmporg}/${package}*.dsc ${tmpnew}/${package}.dsc
+sed -i '/^\ .*.debian.tar./d' ${tmpnew}/${package}.dsc
+sed -i "/^ .*$package.*.tar.*/d" ${tmpnew}/${package}.dsc
+
+### copy /debian files important for OBS
+for debfile in changelog compat control copyright default dirs init install logrotate postinst postrm prerm rules; do
+  cp $srcdir/debian/${debfile} ${tmpnew}/debian.${debfile} 2>/dev/null
+done
+cp $srcdir/debian/patches/*.patch ${tmpnew} 2>/dev/null
+cp $srcdir/debian/patches/series ${tmpnew}/debian.series 2>/dev/null
+
+echo $tmpnew
+ls -l $tmpnew
+
+### get sources for pyra-handheld
+#for package in $(rm Packages;wget -q http://packages.pyra-handheld.com/debian/dists/jessie-pyra/main/binary-armhf/Packages && grep '^Package: ' Packages|cut -d' ' -f2|grep -v ^linux;rm Packages);do mkdir $package;cd $package;sudo apt-get source $package;cd -;done
+
